@@ -12,6 +12,8 @@ import authRoutes from './routes/auth';
 import schoolRoutes from './routes/schools';
 import superAdminRoutes from './routes/super-admin';
 import studentRoutes from './routes/students';
+import teacherRoutes from './routes/teachers';
+import classRoutes from './routes/classes';
 
 /**
  * Cloudflare Workers type with environment bindings
@@ -109,6 +111,8 @@ app.route('/api/auth', authRoutes);
 app.route('/api/schools', schoolRoutes);
 app.route('/api/super-admin', superAdminRoutes);
 app.route('/api/students', studentRoutes);
+app.route('/api/teachers', teacherRoutes);
+app.route('/api/classes', classRoutes);
 
 /**
  * 404 HANDLER
