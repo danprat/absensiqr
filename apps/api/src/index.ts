@@ -6,6 +6,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { sql } from 'drizzle-orm';
 import { createDb, type Env } from './db';
 
 /**
@@ -25,10 +26,16 @@ app.use('*', logger());
 app.use(
   '*',
   cors({
-    origin: '*', // Configure based on environment in production
+    origin: (origin, c) => {
+      const allowedOrigins = c.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+      if (allowedOrigins.includes(origin)) {
+        return origin;
+      }
+      return allowedOrigins[0] || 'http://localhost:5173';
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
-    exposeHeaders: ['Content-Length'],
+    exposeHeaders: ['Content-Length', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],
     maxAge: 600,
     credentials: true,
   })
@@ -51,12 +58,10 @@ app.get('/health', (c) => {
  */
 app.get('/health/db', async (c) => {
   try {
-    // Initialize database connection
-    createDb(c.env);
+    const db = createDb(c.env);
     
-    // Simple query to test connection
-    // Note: This will fail until database is set up and migrations are run
-    // const result = await db.execute(sql`SELECT 1`);
+    // Actually test connection with simple query
+    await db.execute(sql`SELECT 1 as health_check`);
     
     return c.json({
       status: 'healthy',
