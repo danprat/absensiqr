@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/layout/Layout'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { useAuth } from '@/hooks/useAuth'
+import { Toaster } from '@/components/ui/toaster'
+import { PWAPrompt, OfflineIndicator } from '@/components/PWAPrompt'
 
 // Auth pages
 import Login from '@/pages/auth/Login'
@@ -14,6 +16,19 @@ import { ScanPage } from '@/pages/ScanPage'
 
 // Admin pages
 import { Students } from '@/pages/admin/Students'
+import { Teachers } from '@/pages/admin/Teachers'
+import Settings from '@/pages/admin/Settings'
+import { AuditLog } from '@/pages/admin/AuditLog'
+
+// Teacher pages
+import { History } from '@/pages/teacher/History'
+import { ManualAttendance } from '@/pages/teacher/ManualAttendance'
+import { Disputes } from '@/pages/teacher/Disputes'
+
+// Student pages
+import StudentLogin from '@/pages/student/Login'
+import SetupPin from '@/pages/student/SetupPin'
+import MyAttendance from '@/pages/student/MyAttendance'
 
 /**
  * Public Route wrapper - redirects to dashboard if already authenticated
@@ -39,23 +54,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-/**
- * Placeholder component for pages not yet implemented
- */
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-600">This page is under construction</p>
-      </div>
-    </div>
-  )
-}
+
 
 function App() {
   return (
     <BrowserRouter>
+      <OfflineIndicator />
+      <PWAPrompt />
       <Routes>
         {/* Public routes - redirect to dashboard if logged in */}
         <Route
@@ -126,7 +131,27 @@ function App() {
           element={
             <ProtectedRoute requireRole="admin">
               <Layout>
-                <PlaceholderPage title="Teachers Management" />
+                <Teachers />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute requireRole="admin">
+              <Layout>
+                <Settings />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/audit-log"
+          element={
+            <ProtectedRoute requireRole="admin">
+              <Layout>
+                <AuditLog />
               </Layout>
             </ProtectedRoute>
           }
@@ -138,7 +163,7 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <PlaceholderPage title="Attendance History" />
+                <History />
               </Layout>
             </ProtectedRoute>
           }
@@ -148,27 +173,31 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <PlaceholderPage title="Manual Attendance" />
+                <ManualAttendance />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/disputes"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Disputes />
               </Layout>
             </ProtectedRoute>
           }
         />
 
-        {/* Settings */}
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <PlaceholderPage title="Settings" />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        {/* Student Portal routes - separate auth system */}
+        <Route path="/student/login" element={<StudentLogin />} />
+        <Route path="/student/setup-pin" element={<SetupPin />} />
+        <Route path="/student/attendance" element={<MyAttendance />} />
 
         {/* 404 - redirect to dashboard if authenticated, login otherwise */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <Toaster />
     </BrowserRouter>
   )
 }
