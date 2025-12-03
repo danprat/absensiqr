@@ -15,6 +15,10 @@ import studentRoutes from './routes/students';
 import teacherRoutes from './routes/teachers';
 import classRoutes from './routes/classes';
 import attendanceRoutes from './routes/attendance';
+import auditRoutes from './routes/audit';
+import exportRoutes from './routes/export';
+import studentPortalRoutes from './routes/student-portal';
+import disputeRoutes from './routes/disputes';
 
 /**
  * Cloudflare Workers type with environment bindings
@@ -115,6 +119,10 @@ app.route('/api/students', studentRoutes);
 app.route('/api/teachers', teacherRoutes);
 app.route('/api/classes', classRoutes);
 app.route('/api/attendance', attendanceRoutes);
+app.route('/api/audit-logs', auditRoutes);
+app.route('/api/exports', exportRoutes);
+app.route('/api/student', studentPortalRoutes);
+app.route('/api/disputes', disputeRoutes);
 
 /**
  * 404 HANDLER

@@ -84,7 +84,12 @@ export async function logAuditEvent(
     userAgent: params.userAgent || null,
   };
 
-  const [created] = await db.insert(auditLogs).values(auditLog).returning({ id: auditLogs.id });
+  const result = await db.insert(auditLogs).values(auditLog).returning({ id: auditLogs.id });
+  const created = result[0];
+  
+  if (!created) {
+    throw new Error('Failed to create audit log');
+  }
 
   return created.id;
 }
