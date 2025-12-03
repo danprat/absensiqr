@@ -8,6 +8,7 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { sql } from 'drizzle-orm';
 import { createDb, type Env } from './db';
+import authRoutes from './routes/auth';
 
 /**
  * Cloudflare Workers type with environment bindings
@@ -93,9 +94,15 @@ app.get('/api/v1', (c) => {
       health: '/health',
       healthDb: '/health/db',
       docs: '/api/v1/docs',
+      auth: '/api/auth',
     },
   });
 });
+
+/**
+ * ROUTES
+ */
+app.route('/api/auth', authRoutes);
 
 /**
  * 404 HANDLER

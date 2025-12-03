@@ -14,6 +14,9 @@ export interface Env {
   DATABASE_URL: string;
   JWT_SECRET: string;
   ENVIRONMENT: string;
+  ALLOWED_ORIGINS?: string;
+  FRONTEND_URL?: string;
+  RESEND_API_KEY: string;
 }
 
 /**

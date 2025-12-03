@@ -376,6 +376,32 @@ export const passwordResetTokens = pgTable(
 );
 
 /**
+ * Refresh Tokens Table
+ */
+export const refreshTokens = pgTable(
+  'refresh_tokens',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    token: varchar('token', { length: 500 }).notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => ({
+    tokenIdx: uniqueIndex('refresh_tokens_token_idx').on(table.token),
+    userIdIdx: index('refresh_tokens_user_id_idx').on(table.userId),
+    expiresAtIdx: index('refresh_tokens_expires_at_idx').on(table.expiresAt),
+  })
+);
+
+/**
  * TYPE EXPORTS
  * Infer TypeScript types from schema for type-safe database operations
  */
@@ -405,3 +431,6 @@ export type NewExportJob = typeof exportJobs.$inferInsert;
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+export type RefreshToken = typeof refreshTokens.$inferSelect;
+export type NewRefreshToken = typeof refreshTokens.$inferInsert;
