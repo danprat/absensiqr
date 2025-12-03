@@ -9,6 +9,7 @@ import { logger } from 'hono/logger';
 import { sql } from 'drizzle-orm';
 import { createDb, type Env } from './db';
 import authRoutes from './routes/auth';
+import schoolRoutes from './routes/schools';
 
 /**
  * Cloudflare Workers type with environment bindings
@@ -103,6 +104,7 @@ app.get('/api/v1', (c) => {
  * ROUTES
  */
 app.route('/api/auth', authRoutes);
+app.route('/api/schools', schoolRoutes);
 
 /**
  * 404 HANDLER
