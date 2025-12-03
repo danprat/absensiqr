@@ -11,6 +11,7 @@ import { createDb, type Env } from './db';
 import authRoutes from './routes/auth';
 import schoolRoutes from './routes/schools';
 import superAdminRoutes from './routes/super-admin';
+import studentRoutes from './routes/students';
 
 /**
  * Cloudflare Workers type with environment bindings
@@ -107,6 +108,7 @@ app.get('/api/v1', (c) => {
 app.route('/api/auth', authRoutes);
 app.route('/api/schools', schoolRoutes);
 app.route('/api/super-admin', superAdminRoutes);
+app.route('/api/students', studentRoutes);
 
 /**
  * 404 HANDLER
