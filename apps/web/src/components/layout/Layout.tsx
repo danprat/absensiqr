@@ -1,22 +1,52 @@
-import { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Home, QrCode, Users, BarChart3, Settings } from 'lucide-react'
+import { Home, QrCode, Users, BarChart3, Settings, Shield, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
+import { Button } from '@/components/ui/button'
 
 interface LayoutProps {
   children: ReactNode
 }
 
-const navigation = [
+interface NavItem {
+  name: string
+  href: string
+  icon: typeof Home
+  roles?: string[]
+}
+
+const baseNavigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Scan QR', href: '/scan', icon: QrCode },
-  { name: 'Students', href: '/students', icon: Users },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Students', href: '/students', icon: Users, roles: ['admin', 'school_admin', 'super_admin'] },
+  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'school_admin', 'super_admin'] },
+  { name: 'Settings', href: '/settings', icon: Settings, roles: ['admin', 'school_admin', 'super_admin'] },
+]
+
+const superAdminNavigation: NavItem[] = [
+  { name: 'Super Admin', href: '/super-admin', icon: Shield, roles: ['super_admin'] },
 ]
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation()
+  const { user, logout } = useAuth()
+
+  const navigation = useMemo(() => {
+    const userRole = user?.role
+    const filteredBase = baseNavigation.filter(
+      (item) => !item.roles || (userRole && item.roles.includes(userRole))
+    )
+    const filteredSuper = superAdminNavigation.filter(
+      (item) => !item.roles || (userRole && item.roles.includes(userRole))
+    )
+    return [...filteredBase, ...filteredSuper]
+  }, [user?.role])
+
+  const handleLogout = () => {
+    logout()
+    window.location.href = '/auth/login'
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,6 +75,10 @@ export function Layout({ children }: LayoutProps) {
                 </Link>
               )
             })}
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="text-gray-600">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </nav>
         </div>
       </header>

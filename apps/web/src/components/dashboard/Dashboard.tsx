@@ -9,6 +9,24 @@ import { StatsCards, AttendanceStats } from '@/components/dashboard/StatsCards'
 import { RecentScans, AttendanceScan } from '@/components/dashboard/RecentScans'
 import { apiClient, ApiClientError } from '@/services/api'
 
+interface ApiWeeklyTrend {
+  date: string
+  hadir: number
+  alpha: number
+  izin: number
+  sakit: number
+}
+
+interface ApiRecentScan {
+  id: string
+  status: string
+  scanTime: string
+  student: {
+    name: string
+    class: string
+  }
+}
+
 interface AttendanceStatsResponse {
   today: {
     date: string
@@ -21,15 +39,8 @@ interface AttendanceStatsResponse {
     sakit: number
     attendanceRate: number
   }
-  weeklyTrend: AttendanceTrendData[]
-  recentScans: Array<{
-    id: string
-    studentName: string
-    studentNumber: string
-    class: string
-    status: string
-    scanTime: string
-  }>
+  weeklyTrend: ApiWeeklyTrend[]
+  recentScans: ApiRecentScan[]
 }
 
 const AUTO_REFRESH_INTERVAL = 30000 // 30 seconds
@@ -83,7 +94,16 @@ export function Dashboard() {
         excusedToday: today.izin + today.sakit,
         attendanceRate: today.attendanceRate,
       })
-      setWeeklyTrend(trend)
+      
+      // Convert weeklyTrend from Indonesian to English keys
+      const mappedTrend: AttendanceTrendData[] = trend.map(day => ({
+        date: day.date,
+        present: day.hadir,
+        absent: day.alpha,
+        late: 0, // API doesn't track late separately
+        excused: day.izin + day.sakit,
+      }))
+      setWeeklyTrend(mappedTrend)
       
       // Convert today's summary to pie chart format
       setTodaySummary([
@@ -96,9 +116,9 @@ export function Dashboard() {
       // Convert recentScans to AttendanceScan format
       setRecentScans(scans.map((scan, index) => ({
         id: index + 1,
-        studentName: scan.studentName,
-        studentNis: scan.studentNumber,
-        className: scan.class,
+        studentName: scan.student.name,
+        studentNis: '', // API doesn't provide student number in recentScans
+        className: scan.student.class,
         status: statusMap[scan.status] || 'absent',
         scanTime: scan.scanTime,
       })))

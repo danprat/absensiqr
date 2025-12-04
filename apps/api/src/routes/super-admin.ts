@@ -426,4 +426,329 @@ superAdmin.get('/activity', async (c) => {
   }
 });
 
+/**
+ * GET /api/super-admin/schools
+ * Get all schools with filtering
+ */
+superAdmin.get('/schools', async (c) => {
+  try {
+    const db = createDb(c.env);
+    
+    // Parse query params
+    const page = parseInt(c.req.query('page') ?? '1', 10);
+    const limit = parseInt(c.req.query('limit') ?? '10', 10);
+    const status = c.req.query('status'); // active, pending, suspended
+    const search = c.req.query('search');
+    
+    // Validate pagination
+    if (page < 1 || limit < 1 || limit > 100) {
+      return c.json(
+        {
+          error: 'Validation Error',
+          message: 'Invalid pagination parameters',
+        },
+        400
+      );
+    }
+    
+    const offset = (page - 1) * limit;
+    
+    // Build query conditions
+    const conditions = [];
+    if (status && ['active', 'pending', 'suspended'].includes(status)) {
+      conditions.push(eq(schools.status, status as 'active' | 'pending' | 'suspended'));
+    }
+    if (search) {
+      conditions.push(
+        sql`(${schools.name} ILIKE ${'%' + search + '%'} OR ${schools.subdomain} ILIKE ${'%' + search + '%'})`
+      );
+    }
+    
+    // Get schools with admin info
+    const schoolsList = await db
+      .select({
+        id: schools.id,
+        name: schools.name,
+        subdomain: schools.subdomain,
+        status: schools.status,
+        timezone: schools.timezone,
+        maxStudents: schools.maxStudents,
+        createdAt: schools.createdAt,
+        adminEmail: users.email,
+        adminName: users.name,
+      })
+      .from(schools)
+      .leftJoin(
+        users,
+        and(eq(users.schoolId, schools.id), eq(users.role, 'school_admin'))
+      )
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(schools.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    // Get total count
+    const [totalCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(schools)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    const total = totalCount?.count ?? 0;
+    
+    // Get student counts per school
+    const studentCounts = await db
+      .select({
+        schoolId: students.schoolId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(students)
+      .where(eq(students.isActive, true))
+      .groupBy(students.schoolId);
+    
+    const studentCountMap = new Map(
+      studentCounts.map((s) => [s.schoolId, s.count])
+    );
+    
+    return c.json({
+      schools: schoolsList.map((school) => ({
+        id: school.id,
+        name: school.name,
+        subdomain: school.subdomain,
+        status: school.status,
+        timezone: school.timezone,
+        maxStudents: school.maxStudents,
+        studentCount: studentCountMap.get(school.id) ?? 0,
+        adminEmail: school.adminEmail,
+        adminName: school.adminName,
+        createdAt: school.createdAt.toISOString(),
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching schools:', error);
+    
+    return c.json(
+      {
+        error: 'Internal Server Error',
+        message: 'Failed to fetch schools',
+      },
+      500
+    );
+  }
+});
+
+/**
+ * POST /api/super-admin/schools/:id/approve
+ * Approve a pending school
+ */
+superAdmin.post('/schools/:id/approve', async (c) => {
+  try {
+    const schoolId = c.req.param('id');
+    
+    if (!schoolId) {
+      return c.json({ error: 'Validation Error', message: 'School ID is required' }, 400);
+    }
+    
+    const db = createDb(c.env);
+    
+    // Check school exists and is pending
+    const [school] = await db
+      .select()
+      .from(schools)
+      .where(eq(schools.id, schoolId))
+      .limit(1);
+    
+    if (!school) {
+      return c.json({ error: 'Not Found', message: 'School not found' }, 404);
+    }
+    
+    if (school.status !== 'pending') {
+      return c.json(
+        { error: 'Bad Request', message: `School is already ${school.status}` },
+        400
+      );
+    }
+    
+    // Update school status to active
+    const [updated] = await db
+      .update(schools)
+      .set({ status: 'active' })
+      .where(eq(schools.id, schoolId))
+      .returning();
+    
+    return c.json({
+      message: 'School approved successfully',
+      school: {
+        id: updated!.id,
+        name: updated!.name,
+        subdomain: updated!.subdomain,
+        status: updated!.status,
+      },
+    });
+  } catch (error) {
+    console.error('Error approving school:', error);
+    return c.json({ error: 'Internal Server Error', message: 'Failed to approve school' }, 500);
+  }
+});
+
+/**
+ * POST /api/super-admin/schools/:id/reject
+ * Reject a pending school
+ */
+superAdmin.post('/schools/:id/reject', async (c) => {
+  try {
+    const schoolId = c.req.param('id');
+    const body = await c.req.json().catch(() => ({}));
+    const reason = body.reason || 'No reason provided';
+    
+    if (!schoolId) {
+      return c.json({ error: 'Validation Error', message: 'School ID is required' }, 400);
+    }
+    
+    const db = createDb(c.env);
+    
+    // Check school exists and is pending
+    const [school] = await db
+      .select()
+      .from(schools)
+      .where(eq(schools.id, schoolId))
+      .limit(1);
+    
+    if (!school) {
+      return c.json({ error: 'Not Found', message: 'School not found' }, 404);
+    }
+    
+    if (school.status !== 'pending') {
+      return c.json(
+        { error: 'Bad Request', message: `School is already ${school.status}` },
+        400
+      );
+    }
+    
+    // Delete the school and related data (cascade will handle users)
+    await db.delete(schools).where(eq(schools.id, schoolId));
+    
+    return c.json({
+      message: 'School rejected and deleted',
+      reason,
+    });
+  } catch (error) {
+    console.error('Error rejecting school:', error);
+    return c.json({ error: 'Internal Server Error', message: 'Failed to reject school' }, 500);
+  }
+});
+
+/**
+ * POST /api/super-admin/schools/:id/suspend
+ * Suspend an active school
+ */
+superAdmin.post('/schools/:id/suspend', async (c) => {
+  try {
+    const schoolId = c.req.param('id');
+    const body = await c.req.json().catch(() => ({}));
+    const reason = body.reason || 'No reason provided';
+    
+    if (!schoolId) {
+      return c.json({ error: 'Validation Error', message: 'School ID is required' }, 400);
+    }
+    
+    const db = createDb(c.env);
+    
+    // Check school exists and is active
+    const [school] = await db
+      .select()
+      .from(schools)
+      .where(eq(schools.id, schoolId))
+      .limit(1);
+    
+    if (!school) {
+      return c.json({ error: 'Not Found', message: 'School not found' }, 404);
+    }
+    
+    if (school.status === 'suspended') {
+      return c.json({ error: 'Bad Request', message: 'School is already suspended' }, 400);
+    }
+    
+    // Update school status to suspended
+    const [updated] = await db
+      .update(schools)
+      .set({ status: 'suspended' })
+      .where(eq(schools.id, schoolId))
+      .returning();
+    
+    return c.json({
+      message: 'School suspended successfully',
+      reason,
+      school: {
+        id: updated!.id,
+        name: updated!.name,
+        status: updated!.status,
+      },
+    });
+  } catch (error) {
+    console.error('Error suspending school:', error);
+    return c.json({ error: 'Internal Server Error', message: 'Failed to suspend school' }, 500);
+  }
+});
+
+/**
+ * POST /api/super-admin/schools/:id/reactivate
+ * Reactivate a suspended school
+ */
+superAdmin.post('/schools/:id/reactivate', async (c) => {
+  try {
+    const schoolId = c.req.param('id');
+    
+    if (!schoolId) {
+      return c.json({ error: 'Validation Error', message: 'School ID is required' }, 400);
+    }
+    
+    const db = createDb(c.env);
+    
+    // Check school exists and is suspended
+    const [school] = await db
+      .select()
+      .from(schools)
+      .where(eq(schools.id, schoolId))
+      .limit(1);
+    
+    if (!school) {
+      return c.json({ error: 'Not Found', message: 'School not found' }, 404);
+    }
+    
+    if (school.status !== 'suspended') {
+      return c.json(
+        { error: 'Bad Request', message: `School is not suspended (status: ${school.status})` },
+        400
+      );
+    }
+    
+    // Update school status to active
+    const [updated] = await db
+      .update(schools)
+      .set({ status: 'active' })
+      .where(eq(schools.id, schoolId))
+      .returning();
+    
+    return c.json({
+      message: 'School reactivated successfully',
+      school: {
+        id: updated!.id,
+        name: updated!.name,
+        status: updated!.status,
+      },
+    });
+  } catch (error) {
+    console.error('Error reactivating school:', error);
+    return c.json({ error: 'Internal Server Error', message: 'Failed to reactivate school' }, 500);
+  }
+});
+
 export default superAdmin;

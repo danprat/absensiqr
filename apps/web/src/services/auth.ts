@@ -36,7 +36,7 @@ export interface User {
   id: string
   name: string
   email: string
-  role: 'admin' | 'teacher' | 'school_admin'
+  role: 'admin' | 'teacher' | 'school_admin' | 'super_admin'
   schoolId: string
   createdAt: string
 }

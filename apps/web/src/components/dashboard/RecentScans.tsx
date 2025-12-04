@@ -7,7 +7,7 @@ import { UserCheck, Clock, UserX, AlertCircle } from 'lucide-react'
 export interface AttendanceScan {
   id: number
   studentName: string
-  studentNis: string
+  studentNis?: string
   className: string
   status: 'present' | 'late' | 'absent' | 'excused'
   scanTime: string
@@ -126,9 +126,11 @@ export function RecentScans({ scans, isLoading, maxItems = 10 }: RecentScansProp
                 <div className="flex-1 space-y-1 min-w-0">
                   <p className="text-sm font-medium leading-none">
                     {scan.studentName}
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      ({scan.studentNis})
-                    </span>
+                    {scan.studentNis && (
+                      <span className="ml-2 text-xs text-muted-foreground">
+                        ({scan.studentNis})
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {scan.className} • {timeAgo}

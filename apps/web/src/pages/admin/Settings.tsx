@@ -80,15 +80,15 @@ export default function Settings() {
       setSettings(response.school)
       setLogoPreview(response.school.logoUrl || null)
 
-      // Populate form
+      // Populate form - extract start/end from schoolHours (use monday as default)
+      const defaultHours = response.school.schoolHours?.monday || { start: '07:00', end: '15:00' }
       setFormData({
         name: response.school.name,
-        address: response.school.address,
-        phone: response.school.phone,
         primaryColor: response.school.primaryColor,
-        startTime: response.school.startTime,
-        endTime: response.school.endTime,
+        startTime: defaultHours.start,
+        endTime: defaultHours.end,
         timezone: response.school.timezone,
+        maxStudents: response.school.maxStudents,
       })
     } catch (error) {
       toast({
@@ -106,7 +106,7 @@ export default function Settings() {
    */
   const handleInputChange = (
     field: keyof SettingsFormData,
-    value: string
+    value: string | number
   ): void => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     // Clear error for this field
@@ -215,7 +215,20 @@ export default function Settings() {
 
     try {
       setSaving(true)
-      const updateData: UpdateSchoolSettingsData = formData
+      // Build schoolHours from startTime/endTime (apply to weekdays)
+      const updateData: UpdateSchoolSettingsData = {
+        name: formData.name,
+        primaryColor: formData.primaryColor,
+        timezone: formData.timezone,
+        maxStudents: formData.maxStudents,
+        schoolHours: {
+          monday: { start: formData.startTime, end: formData.endTime },
+          tuesday: { start: formData.startTime, end: formData.endTime },
+          wednesday: { start: formData.startTime, end: formData.endTime },
+          thursday: { start: formData.startTime, end: formData.endTime },
+          friday: { start: formData.startTime, end: formData.endTime },
+        },
+      }
       const response = await updateSchoolSettings(updateData)
       
       setSettings(response.school)
@@ -294,31 +307,26 @@ export default function Settings() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
+                <Label htmlFor="maxStudents">Max Students</Label>
                 <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  placeholder="Enter school address"
-                  className={errors.address ? 'border-destructive' : ''}
+                  id="maxStudents"
+                  type="number"
+                  value={formData.maxStudents}
+                  onChange={(e) => handleInputChange('maxStudents', parseInt(e.target.value) || 100)}
+                  placeholder="Maximum number of students"
+                  min={10}
+                  max={10000}
                 />
-                {errors.address && (
-                  <p className="text-sm text-destructive">{errors.address}</p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="status">Status</Label>
                 <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="Enter phone number"
-                  className={errors.phone ? 'border-destructive' : ''}
+                  id="status"
+                  value={settings?.status || ''}
+                  disabled
+                  className="bg-muted capitalize"
                 />
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone}</p>
-                )}
               </div>
             </CardContent>
           </Card>

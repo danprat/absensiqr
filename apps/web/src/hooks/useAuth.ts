@@ -148,38 +148,50 @@ export const useAuth = () => {
   }, [token, setToken, logout])
 
   /**
-   * Initialize auth state on mount
+   * Initialize auth state on mount - run only once
    */
   useEffect(() => {
+    let isMounted = true
+    
     const initAuth = async () => {
       const savedToken = getAuthToken()
+      const savedUser = getSavedUser()
+      const savedSchool = getSavedSchool()
       
-      if (savedToken) {
+      if (savedToken && isMounted) {
         setToken(savedToken)
-        await refreshUser()
+        // If we have saved user data, use it directly without API call
+        if (savedUser && savedSchool) {
+          setUser(savedUser)
+          setSchool(savedSchool)
+        }
+        // Don't call refreshUser on mount - data is already in localStorage
       }
     }
 
     initAuth()
+    
+    return () => {
+      isMounted = false
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /**
-   * Auto-refresh token
+   * Auto-refresh token (only set up interval, don't refresh immediately)
    */
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || !token) return
 
-    // Refresh immediately
-    refreshAuthToken()
-
-    // Set up interval for periodic refresh
+    // Set up interval for periodic refresh (every 45 minutes)
     const intervalId = setInterval(() => {
       refreshAuthToken()
     }, TOKEN_REFRESH_INTERVAL)
 
     return () => clearInterval(intervalId)
-  }, [isAuthenticated, refreshAuthToken])
+    // Only depend on isAuthenticated, not refreshAuthToken to avoid loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
 
   return {
     user,

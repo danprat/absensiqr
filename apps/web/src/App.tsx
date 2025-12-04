@@ -19,6 +19,10 @@ import { Students } from '@/pages/admin/Students'
 import { Teachers } from '@/pages/admin/Teachers'
 import Settings from '@/pages/admin/Settings'
 import { AuditLog } from '@/pages/admin/AuditLog'
+import { Reports } from '@/pages/admin/Reports'
+
+// Super Admin pages
+import SuperAdminDashboard from '@/pages/superadmin/Dashboard'
 
 // Teacher pages
 import { History } from '@/pages/teacher/History'
@@ -152,6 +156,28 @@ function App() {
             <ProtectedRoute requireRole="admin">
               <Layout>
                 <AuditLog />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute requireRole="admin">
+              <Layout>
+                <Reports />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Super Admin routes */}
+        <Route
+          path="/super-admin"
+          element={
+            <ProtectedRoute requireRole="super_admin">
+              <Layout>
+                <SuperAdminDashboard />
               </Layout>
             </ProtectedRoute>
           }
