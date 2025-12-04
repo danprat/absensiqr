@@ -4,7 +4,7 @@
  * Admin page for managing students with CRUD operations
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -91,7 +91,7 @@ export function Students() {
   /**
    * Fetch students from API
    */
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -103,7 +103,7 @@ export function Students() {
       }
       
       if (searchTerm) filters.search = searchTerm
-      if (selectedClass) filters.class = selectedClass
+      if (selectedClass && selectedClass !== 'all') filters.class = selectedClass
       
       const response = await getStudents(filters)
       
@@ -120,29 +120,24 @@ export function Students() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentPage, selectedClass, isActiveFilter, searchTerm, toast])
 
   /**
    * Initial load and filter changes
    */
   useEffect(() => {
     fetchStudents()
-  }, [currentPage, selectedClass, isActiveFilter])
+  }, [fetchStudents])
 
   /**
-   * Search with debounce
+   * Search with debounce - handled by fetchStudents dependency on searchTerm
    */
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (currentPage === 1) {
-        fetchStudents()
-      } else {
-        setCurrentPage(1)
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+    // Reset to page 1 when search term changes
+    if (searchTerm && currentPage !== 1) {
+      setCurrentPage(1)
+    }
+  }, [searchTerm, currentPage])
 
   /**
    * Handle create student
@@ -238,7 +233,7 @@ export function Students() {
       setIsDownloadingQR(true)
       
       const filters: Pick<ListStudentsFilters, 'class' | 'search'> = {}
-      if (selectedClass) filters.class = selectedClass
+      if (selectedClass && selectedClass !== 'all') filters.class = selectedClass
       if (searchTerm) filters.search = searchTerm
       
       const url = await downloadQRPdf(filters)
@@ -306,7 +301,7 @@ export function Students() {
               <SelectValue placeholder="Filter by class" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Classes</SelectItem>
+              <SelectItem value="all">All Classes</SelectItem>
               {uniqueClasses.map((cls) => (
                 <SelectItem key={cls} value={cls}>
                   {cls}

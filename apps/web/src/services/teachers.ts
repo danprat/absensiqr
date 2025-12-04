@@ -103,7 +103,7 @@ export const getTeachers = async (
   if (filters?.page) params.page = String(filters.page)
   if (filters?.limit) params.limit = String(filters.limit)
   
-  return authClient.get<ListTeachersResponse>('/teachers', { params })
+  return authClient.get<ListTeachersResponse>('/api/teachers', { params })
 }
 
 /**
@@ -111,7 +111,7 @@ export const getTeachers = async (
  */
 export const getTeacher = async (id: string): Promise<TeacherResponse> => {
   const authClient = getAuthClient()
-  return authClient.get<TeacherResponse>(`/teachers/${id}`)
+  return authClient.get<TeacherResponse>(`/api/teachers/${id}`)
 }
 
 /**
@@ -121,7 +121,7 @@ export const createTeacher = async (
   data: CreateTeacherData
 ): Promise<TeacherResponse> => {
   const authClient = getAuthClient()
-  return authClient.post<TeacherResponse>('/teachers', data)
+  return authClient.post<TeacherResponse>('/api/teachers', data)
 }
 
 /**
@@ -132,7 +132,7 @@ export const updateTeacher = async (
   data: UpdateTeacherData
 ): Promise<TeacherResponse> => {
   const authClient = getAuthClient()
-  return authClient.patch<TeacherResponse>(`/teachers/${id}`, data)
+  return authClient.patch<TeacherResponse>(`/api/teachers/${id}`, data)
 }
 
 /**
@@ -140,7 +140,7 @@ export const updateTeacher = async (
  */
 export const deleteTeacher = async (id: string): Promise<{ message: string; teacherId: string }> => {
   const authClient = getAuthClient()
-  return authClient.delete<{ message: string; teacherId: string }>(`/teachers/${id}`)
+  return authClient.delete<{ message: string; teacherId: string }>(`/api/teachers/${id}`)
 }
 
 /**
@@ -151,7 +151,7 @@ export const assignClasses = async (
   classes: string[]
 ): Promise<AssignClassesResponse> => {
   const authClient = getAuthClient()
-  return authClient.post<AssignClassesResponse>(`/teachers/${teacherId}/classes`, {
+  return authClient.post<AssignClassesResponse>(`/api/teachers/${teacherId}/classes`, {
     classes,
   })
 }
@@ -165,7 +165,7 @@ export const removeClassAssignment = async (
 ): Promise<RemoveClassResponse> => {
   const authClient = getAuthClient()
   return authClient.delete<RemoveClassResponse>(
-    `/teachers/${teacherId}/classes/${encodeURIComponent(className)}`
+    `/api/teachers/${teacherId}/classes/${encodeURIComponent(className)}`
   )
 }
 
@@ -174,6 +174,6 @@ export const removeClassAssignment = async (
  */
 export const getTeacherClasses = async (teacherId: string): Promise<string[]> => {
   const authClient = getAuthClient()
-  const response = await authClient.get<TeacherResponse>(`/teachers/${teacherId}`)
+  const response = await authClient.get<TeacherResponse>(`/api/teachers/${teacherId}`)
   return response.teacher.classes
 }

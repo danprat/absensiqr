@@ -146,11 +146,12 @@ export const AttendanceFilters: React.FC<AttendanceFiltersProps> = ({
       case 'week':
         startDate = getWeekAgoDate()
         break
-      case 'month':
+      case 'month': {
         const date = new Date()
         date.setMonth(date.getMonth() - 1)
         startDate = date.toISOString().split('T')[0]
         break
+      }
     }
 
     const newFilters = { ...localFilters, startDate, endDate }

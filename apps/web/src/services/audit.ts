@@ -132,7 +132,7 @@ export const getAuditLogs = async (
   if (filters?.page) params.page = String(filters.page)
   if (filters?.limit) params.limit = String(filters.limit)
   
-  return authClient.get<AuditLogsResponse>('/audit-logs', { params })
+  return authClient.get<AuditLogsResponse>('/api/audit-logs', { params })
 }
 
 /**
@@ -143,7 +143,7 @@ export const getAuditLogs = async (
  */
 export const getAuditLog = async (id: string): Promise<AuditLog> => {
   const authClient = getAuthClient()
-  return authClient.get<AuditLog>(`/audit-logs/${id}`)
+  return authClient.get<AuditLog>(`/api/audit-logs/${id}`)
 }
 
 /**
@@ -169,7 +169,7 @@ export const exportAuditLogs = async (
   if (filters?.endDate) params.set('endDate', filters.endDate)
   
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787'
-  const url = `${baseUrl}/audit-logs/export?${params.toString()}`
+  const url = `${baseUrl}/api/audit-logs/export?${params.toString()}`
   
   const response = await fetch(url, {
     headers: {

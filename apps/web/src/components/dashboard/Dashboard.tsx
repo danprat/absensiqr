@@ -10,13 +10,26 @@ import { RecentScans, AttendanceScan } from '@/components/dashboard/RecentScans'
 import { apiClient, ApiClientError } from '@/services/api'
 
 interface AttendanceStatsResponse {
-  stats: AttendanceStats
+  today: {
+    date: string
+    totalStudents: number
+    scanned: number
+    notScanned: number
+    hadir: number
+    alpha: number
+    izin: number
+    sakit: number
+    attendanceRate: number
+  }
   weeklyTrend: AttendanceTrendData[]
-  todaySummary: AttendanceStatusData[]
-}
-
-interface AttendanceSummaryResponse {
-  recentScans: AttendanceScan[]
+  recentScans: Array<{
+    id: string
+    studentName: string
+    studentNumber: string
+    class: string
+    status: string
+    scanTime: string
+  }>
 }
 
 const AUTO_REFRESH_INTERVAL = 30000 // 30 seconds
@@ -44,22 +57,51 @@ export function Dashboard() {
       // Get auth token from localStorage
       const token = localStorage.getItem('auth_token')
       
-      // Fetch stats and summary in parallel
-      const [statsResponse, summaryResponse] = await Promise.all([
-        apiClient.get<AttendanceStatsResponse>(
-          `/api/attendance/stats?range=${dateRange}`,
-          { token: token || undefined }
-        ),
-        apiClient.get<AttendanceSummaryResponse>(
-          '/api/attendance/summary?limit=20',
-          { token: token || undefined }
-        ),
-      ])
+      // Fetch stats (includes today, weeklyTrend, and recentScans)
+      const statsResponse = await apiClient.get<AttendanceStatsResponse>(
+        `/api/attendance/stats?range=${dateRange}`,
+        { token: token || undefined }
+      )
 
-      setStats(statsResponse.stats)
-      setWeeklyTrend(statsResponse.weeklyTrend)
-      setTodaySummary(statsResponse.todaySummary)
-      setRecentScans(summaryResponse.recentScans)
+      // Map API response to component state
+      const { today, weeklyTrend: trend, recentScans: scans } = statsResponse
+      
+      // Map Indonesian status to English for frontend components
+      const statusMap: Record<string, 'present' | 'late' | 'absent' | 'excused'> = {
+        hadir: 'present',
+        alpha: 'absent',
+        izin: 'excused',
+        sakit: 'excused', // sick is treated as excused
+      }
+      
+      // Convert today stats to AttendanceStats format
+      setStats({
+        totalStudents: today.totalStudents,
+        presentToday: today.hadir,
+        absentToday: today.alpha,
+        lateToday: 0, // API doesn't provide late count separately
+        excusedToday: today.izin + today.sakit,
+        attendanceRate: today.attendanceRate,
+      })
+      setWeeklyTrend(trend)
+      
+      // Convert today's summary to pie chart format
+      setTodaySummary([
+        { status: 'present', count: today.hadir },
+        { status: 'absent', count: today.alpha },
+        { status: 'late', count: 0 },
+        { status: 'excused', count: today.izin + today.sakit },
+      ])
+      
+      // Convert recentScans to AttendanceScan format
+      setRecentScans(scans.map((scan, index) => ({
+        id: index + 1,
+        studentName: scan.studentName,
+        studentNis: scan.studentNumber,
+        className: scan.class,
+        status: statusMap[scan.status] || 'absent',
+        scanTime: scan.scanTime,
+      })))
       setLastRefresh(new Date())
     } catch (err) {
       if (err instanceof ApiClientError) {

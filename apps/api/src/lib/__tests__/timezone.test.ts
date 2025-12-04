@@ -2,7 +2,7 @@
  * Timezone Utilities Test Suite
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   TIMEZONES,
   getTimezoneIdentifier,
@@ -361,7 +361,6 @@ describe('Timezone Utilities', () => {
   describe('Timezone Integration', () => {
     it('should maintain consistency across timezone functions', () => {
       const timezone: TimezoneType = 'WIB';
-      const now = new Date();
 
       // Get time in timezone
       const localTime = getSchoolLocalTime(timezone);

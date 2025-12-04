@@ -80,13 +80,14 @@ export default function Register() {
 
     try {
       // Remove confirmPassword from the payload
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...registrationData } = data
       
       const response = await registerApi(registrationData)
       
       // Save auth data
       saveAuthData(response)
-      setToken(response.token)
+      setToken(response.tokens.accessToken)
       setUser(response.user)
       setSchool(response.school)
       

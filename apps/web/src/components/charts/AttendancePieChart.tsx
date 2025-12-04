@@ -55,6 +55,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string> & { pay
   return null
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderLabel = (entry: any) => {
   return `${entry.percentage || ''}`
 }

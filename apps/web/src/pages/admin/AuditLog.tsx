@@ -67,9 +67,9 @@ export function AuditLog() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   
-  // Filters
-  const [selectedAction, setSelectedAction] = useState<AuditAction | ''>('')
-  const [selectedEntityType, setSelectedEntityType] = useState<AuditEntityType | ''>('')
+  // Filters - use 'all' | AuditAction to match SelectItem values
+  const [selectedAction, setSelectedAction] = useState<AuditAction | 'all'>('all')
+  const [selectedEntityType, setSelectedEntityType] = useState<AuditEntityType | 'all'>('all')
   const [userIdFilter, setUserIdFilter] = useState('')
   const [startDateFilter, setStartDateFilter] = useState('')
   const [endDateFilter, setEndDateFilter] = useState('')
@@ -97,8 +97,8 @@ export function AuditLog() {
         limit: 20,
       }
       
-      if (selectedAction) filters.action = selectedAction
-      if (selectedEntityType) filters.entityType = selectedEntityType
+      if (selectedAction !== 'all') filters.action = selectedAction
+      if (selectedEntityType !== 'all') filters.entityType = selectedEntityType
       if (userIdFilter) filters.userId = userIdFilter
       if (startDateFilter) filters.startDate = new Date(startDateFilter).toISOString()
       if (endDateFilter) filters.endDate = new Date(endDateFilter).toISOString()
@@ -151,8 +151,8 @@ export function AuditLog() {
       
       const filters: Omit<AuditLogFilters, 'page' | 'limit'> = {}
       
-      if (selectedAction) filters.action = selectedAction
-      if (selectedEntityType) filters.entityType = selectedEntityType
+      if (selectedAction !== 'all') filters.action = selectedAction
+      if (selectedEntityType !== 'all') filters.entityType = selectedEntityType
       if (userIdFilter) filters.userId = userIdFilter
       if (startDateFilter) filters.startDate = new Date(startDateFilter).toISOString()
       if (endDateFilter) filters.endDate = new Date(endDateFilter).toISOString()
@@ -190,8 +190,8 @@ export function AuditLog() {
    * Reset filters
    */
   const handleResetFilters = () => {
-    setSelectedAction('')
-    setSelectedEntityType('')
+    setSelectedAction('all')
+    setSelectedEntityType('all')
     setUserIdFilter('')
     setStartDateFilter('')
     setEndDateFilter('')
@@ -282,7 +282,7 @@ export function AuditLog() {
             <Select
               value={selectedAction}
               onValueChange={(value) => {
-                setSelectedAction(value as AuditAction | '')
+                setSelectedAction(value as AuditAction | 'all')
                 setCurrentPage(1)
               }}
             >
@@ -290,7 +290,7 @@ export function AuditLog() {
                 <SelectValue placeholder="All actions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All actions</SelectItem>
+                <SelectItem value="all">All actions</SelectItem>
                 <SelectItem value="create">Create</SelectItem>
                 <SelectItem value="update">Update</SelectItem>
                 <SelectItem value="delete">Delete</SelectItem>
@@ -312,7 +312,7 @@ export function AuditLog() {
             <Select
               value={selectedEntityType}
               onValueChange={(value) => {
-                setSelectedEntityType(value as AuditEntityType | '')
+                setSelectedEntityType(value as AuditEntityType | 'all')
                 setCurrentPage(1)
               }}
             >
@@ -320,7 +320,7 @@ export function AuditLog() {
                 <SelectValue placeholder="All entities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All entities</SelectItem>
+                <SelectItem value="all">All entities</SelectItem>
                 <SelectItem value="user">User</SelectItem>
                 <SelectItem value="student">Student</SelectItem>
                 <SelectItem value="teacher">Teacher</SelectItem>

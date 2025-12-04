@@ -5,34 +5,40 @@
  */
 
 import { createAuthenticatedClient } from './api'
-import { getAuthToken } from './auth'
+import { getAuthToken, getSavedSchool } from './auth'
 
 /**
  * Types
  */
+export interface SchoolHours {
+  monday?: { start: string; end: string }
+  tuesday?: { start: string; end: string }
+  wednesday?: { start: string; end: string }
+  thursday?: { start: string; end: string }
+  friday?: { start: string; end: string }
+  saturday?: { start: string; end: string }
+  sunday?: { start: string; end: string }
+}
+
 export interface SchoolSettings {
   id: string
   name: string
   subdomain: string
-  address: string
-  phone: string
   logoUrl?: string | null
   primaryColor: string
-  startTime: string
-  endTime: string
-  timezone: 'WIB' | 'WITA' | 'WIT'
+  status: 'pending' | 'active' | 'suspended'
+  schoolHours: SchoolHours
   maxStudents: number
+  timezone: 'WIB' | 'WITA' | 'WIT'
   createdAt: string
-  updatedAt: string
 }
 
 export interface UpdateSchoolSettingsData {
   name?: string
-  address?: string
-  phone?: string
+  logoUrl?: string
   primaryColor?: string
-  startTime?: string
-  endTime?: string
+  schoolHours?: SchoolHours
+  maxStudents?: number
   timezone?: 'WIB' | 'WITA' | 'WIT'
 }
 
@@ -58,11 +64,23 @@ const getAuthClient = () => {
 }
 
 /**
+ * Get school ID from saved context
+ */
+const getSchoolId = (): string => {
+  const school = getSavedSchool()
+  if (!school?.id) {
+    throw new Error('School context not found')
+  }
+  return school.id
+}
+
+/**
  * Get school settings
  */
 export const getSchoolSettings = async (): Promise<SchoolSettingsResponse> => {
   const authClient = getAuthClient()
-  return authClient.get<SchoolSettingsResponse>('/schools/settings')
+  const schoolId = getSchoolId()
+  return authClient.get<SchoolSettingsResponse>(`/api/schools/${schoolId}`)
 }
 
 /**
@@ -72,7 +90,8 @@ export const updateSchoolSettings = async (
   data: UpdateSchoolSettingsData
 ): Promise<SchoolSettingsResponse> => {
   const authClient = getAuthClient()
-  return authClient.put<SchoolSettingsResponse>('/schools/settings', data)
+  const schoolId = getSchoolId()
+  return authClient.patch<SchoolSettingsResponse>(`/api/schools/${schoolId}`, data)
 }
 
 /**
@@ -89,7 +108,8 @@ export const uploadLogo = async (file: File): Promise<UploadLogoResponse> => {
   formData.append('logo', file)
 
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787'
-  const url = `${baseUrl}/schools/logo`
+  const schoolId = getSchoolId()
+  const url = `${baseUrl}/api/schools/${schoolId}/logo`
 
   const response = await fetch(url, {
     method: 'POST',

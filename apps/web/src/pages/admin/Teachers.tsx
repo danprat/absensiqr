@@ -4,7 +4,7 @@
  * Admin page for managing teachers with CRUD operations and class assignments
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -100,7 +100,7 @@ export function Teachers() {
   /**
    * Fetch teachers from API
    */
-  const fetchTeachers = async () => {
+  const fetchTeachers = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -126,14 +126,14 @@ export function Teachers() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentPage, isActiveFilter, toast])
 
   /**
    * Initial load and filter changes
    */
   useEffect(() => {
     fetchTeachers()
-  }, [currentPage, isActiveFilter])
+  }, [fetchTeachers])
 
   /**
    * Fetch available classes on mount

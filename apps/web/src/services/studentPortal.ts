@@ -162,7 +162,7 @@ export interface PinSetupResponse {
 export const studentLogin = async (
   credentials: StudentLoginCredentials
 ): Promise<StudentAuthResponse> => {
-  return apiClient.post<StudentAuthResponse>('/student/login', credentials)
+  return apiClient.post<StudentAuthResponse>('/api/student/login', credentials)
 }
 
 /**
@@ -178,7 +178,7 @@ export const setupPin = async (
   token: string
 ): Promise<PinSetupResponse> => {
   const authClient = createAuthenticatedClient(token)
-  return authClient.post<PinSetupResponse>('/student/setup-pin', pinData)
+  return authClient.post<PinSetupResponse>('/api/student/setup-pin', pinData)
 }
 
 /**
@@ -203,7 +203,7 @@ export const getMyAttendance = async (
   if (filters.limit !== undefined) params.limit = filters.limit.toString()
   if (filters.offset !== undefined) params.offset = filters.offset.toString()
   
-  return authClient.get<AttendanceHistoryResponse>('/student/attendance', { params })
+  return authClient.get<AttendanceHistoryResponse>('/api/student/attendance', { params })
 }
 
 /**
@@ -219,7 +219,7 @@ export const submitDispute = async (
   token: string
 ): Promise<DisputeCreationResponse> => {
   const authClient = createAuthenticatedClient(token)
-  return authClient.post<DisputeCreationResponse>('/student/disputes', dispute)
+  return authClient.post<DisputeCreationResponse>('/api/student/disputes', dispute)
 }
 
 /**
@@ -233,7 +233,7 @@ export const getMyDisputes = async (
   token: string
 ): Promise<StudentDisputesResponse> => {
   const authClient = createAuthenticatedClient(token)
-  return authClient.get<StudentDisputesResponse>('/student/disputes')
+  return authClient.get<StudentDisputesResponse>('/api/student/disputes')
 }
 
 // ============================================================================

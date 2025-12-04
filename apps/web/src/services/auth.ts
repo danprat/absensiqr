@@ -22,7 +22,12 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
-  token: string
+  message: string
+  tokens: {
+    accessToken: string
+    refreshToken: string
+    expiresIn: number
+  }
   user: User
   school: School
 }
@@ -31,7 +36,7 @@ export interface User {
   id: string
   name: string
   email: string
-  role: 'admin' | 'teacher'
+  role: 'admin' | 'teacher' | 'school_admin'
   schoolId: string
   createdAt: string
 }
@@ -39,9 +44,11 @@ export interface User {
 export interface School {
   id: string
   name: string
-  address: string
-  phone: string
-  createdAt: string
+  subdomain: string
+  status: string
+  logoUrl?: string | null
+  primaryColor?: string
+  timezone?: string
 }
 
 export interface ForgotPasswordRequest {
@@ -62,14 +69,14 @@ export interface MeResponse {
  * Login with email and password
  */
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-  return apiClient.post<AuthResponse>('/auth/login', credentials)
+  return apiClient.post<AuthResponse>('/api/auth/login', credentials)
 }
 
 /**
  * Register a new school and admin user
  */
 export const register = async (data: RegisterData): Promise<AuthResponse> => {
-  return apiClient.post<AuthResponse>('/auth/register', data)
+  return apiClient.post<AuthResponse>('/api/auth/register', data)
 }
 
 /**
@@ -86,7 +93,7 @@ export const logout = async (): Promise<void> => {
  * Request password reset
  */
 export const forgotPassword = async (email: string): Promise<{ message: string }> => {
-  return apiClient.post<{ message: string }>('/auth/forgot-password', { email })
+  return apiClient.post<{ message: string }>('/api/auth/forgot-password', { email })
 }
 
 /**
@@ -96,7 +103,7 @@ export const resetPassword = async (
   token: string,
   password: string
 ): Promise<{ message: string }> => {
-  return apiClient.post<{ message: string }>('/auth/reset-password', {
+  return apiClient.post<{ message: string }>('/api/auth/reset-password', {
     token,
     password,
   })
@@ -107,22 +114,30 @@ export const resetPassword = async (
  */
 export const getMe = async (token: string): Promise<MeResponse> => {
   const authClient = createAuthenticatedClient(token)
-  return authClient.get<MeResponse>('/auth/me')
+  return authClient.get<MeResponse>('/api/auth/me')
 }
 
 /**
  * Refresh access token
  */
-export const refreshToken = async (token: string): Promise<{ token: string }> => {
-  const authClient = createAuthenticatedClient(token)
-  return authClient.post<{ token: string }>('/auth/refresh')
+export const refreshToken = async (currentToken: string): Promise<{ accessToken: string }> => {
+  const storedRefreshToken = localStorage.getItem('refresh_token')
+  if (!storedRefreshToken) {
+    throw new Error('No refresh token available')
+  }
+  const authClient = createAuthenticatedClient(currentToken)
+  const response = await authClient.post<{ message: string; tokens: { accessToken: string; expiresIn: number } }>('/api/auth/refresh', { 
+    refreshToken: storedRefreshToken 
+  })
+  return { accessToken: response.tokens.accessToken }
 }
 
 /**
  * Save auth data to localStorage
  */
 export const saveAuthData = (data: AuthResponse): void => {
-  localStorage.setItem('auth_token', data.token)
+  localStorage.setItem('auth_token', data.tokens.accessToken)
+  localStorage.setItem('refresh_token', data.tokens.refreshToken)
   localStorage.setItem('auth_user', JSON.stringify(data.user))
   localStorage.setItem('auth_school', JSON.stringify(data.school))
 }

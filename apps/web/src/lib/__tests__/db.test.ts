@@ -19,9 +19,9 @@ vi.mock('dexie', () => {
     default: class MockDexie {
       version = vi.fn().mockReturnThis();
       stores = vi.fn().mockReturnThis();
-      cachedStudents = mockTable;
-      pendingScans = mockTable;
-      cachedAttendance = mockTable;
+      cached_students = mockTable;
+      pending_scans = mockTable;
+      cached_attendance = mockTable;
     },
   };
 });
@@ -34,67 +34,75 @@ describe('IndexedDB Database', () => {
   });
 
   describe('Database Structure', () => {
-    it('should have cachedStudents table', () => {
-      expect(db.cachedStudents).toBeDefined();
+    it('should have cached_students table', () => {
+      expect(db.cached_students).toBeDefined();
     });
 
-    it('should have pendingScans table', () => {
-      expect(db.pendingScans).toBeDefined();
+    it('should have pending_scans table', () => {
+      expect(db.pending_scans).toBeDefined();
     });
 
-    it('should have cachedAttendance table', () => {
-      expect(db.cachedAttendance).toBeDefined();
+    it('should have cached_attendance table', () => {
+      expect(db.cached_attendance).toBeDefined();
     });
   });
 
-  describe('cachedStudents table', () => {
+  describe('cached_students table', () => {
     it('should add a student', async () => {
       const student = {
         id: '123',
+        school_id: 'sch-123',
         name: 'John Doe',
-        class: 'X-A',
-        qrCode: 'QR123',
+        identifier: 'NIS123',
+        class_name: 'X-A',
+        qr_code: 'QR123',
+        is_active: true,
+        cached_at: Date.now(),
       };
 
-      db.cachedStudents.add(student);
-      expect(db.cachedStudents.add).toHaveBeenCalledWith(student);
+      db.cached_students.add(student);
+      expect(db.cached_students.add).toHaveBeenCalledWith(student);
     });
 
     it('should get all students', async () => {
-      db.cachedStudents.toArray();
-      expect(db.cachedStudents.toArray).toHaveBeenCalled();
+      db.cached_students.toArray();
+      expect(db.cached_students.toArray).toHaveBeenCalled();
     });
   });
 
-  describe('pendingScans table', () => {
+  describe('pending_scans table', () => {
     it('should add a pending scan', async () => {
       const scan = {
-        qrCode: 'QR123',
-        status: 'hadir',
-        timestamp: new Date().toISOString(),
+        student_id: 'stu-123',
+        school_id: 'sch-123',
+        scan_time: Date.now(),
+        synced: false,
+        created_at: Date.now(),
       };
 
-      db.pendingScans.add(scan);
-      expect(db.pendingScans.add).toHaveBeenCalledWith(scan);
+      db.pending_scans.add(scan);
+      expect(db.pending_scans.add).toHaveBeenCalledWith(scan);
     });
 
     it('should clear pending scans', async () => {
-      db.pendingScans.clear();
-      expect(db.pendingScans.clear).toHaveBeenCalled();
+      db.pending_scans.clear();
+      expect(db.pending_scans.clear).toHaveBeenCalled();
     });
   });
 
-  describe('cachedAttendance table', () => {
+  describe('cached_attendance table', () => {
     it('should add attendance record', async () => {
       const attendance = {
         id: 'att-123',
-        studentId: 'stu-123',
-        date: '2024-01-15',
-        status: 'hadir',
+        student_id: 'stu-123',
+        school_id: 'sch-123',
+        scan_time: Date.now(),
+        status: 'present' as const,
+        cached_at: Date.now(),
       };
 
-      db.cachedAttendance.add(attendance);
-      expect(db.cachedAttendance.add).toHaveBeenCalledWith(attendance);
+      db.cached_attendance.add(attendance);
+      expect(db.cached_attendance.add).toHaveBeenCalledWith(attendance);
     });
   });
 });

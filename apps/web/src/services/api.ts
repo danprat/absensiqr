@@ -47,7 +47,10 @@ class ApiClient {
    * Build URL with query parameters
    */
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean>): string {
-    const url = new URL(endpoint, this.baseUrl)
+    // Ensure baseUrl ends with / and endpoint doesn't start with /
+    const base = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`
+    const path = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint
+    const url = new URL(path, base)
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         url.searchParams.append(key, String(value))

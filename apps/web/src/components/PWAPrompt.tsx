@@ -47,7 +47,7 @@ export function PWAPrompt() {
       }
 
       // Check if running as PWA on iOS
-      if ((window.navigator as any).standalone === true) {
+      if ((window.navigator as unknown as { standalone?: boolean }).standalone === true) {
         setIsInstalled(true)
         return true
       }
@@ -217,7 +217,7 @@ export function useIsInstalled(): boolean {
       }
 
       // Check if running as PWA on iOS
-      if ((window.navigator as any).standalone === true) {
+      if ((window.navigator as unknown as { standalone?: boolean }).standalone === true) {
         return true
       }
 

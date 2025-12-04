@@ -137,7 +137,7 @@ export const getStudents = async (
   if (filters?.page) params.page = String(filters.page)
   if (filters?.limit) params.limit = String(filters.limit)
   
-  return authClient.get<ListStudentsResponse>('/students', { params })
+  return authClient.get<ListStudentsResponse>('/api/students', { params })
 }
 
 /**
@@ -145,7 +145,7 @@ export const getStudents = async (
  */
 export const getStudent = async (id: string): Promise<StudentResponse> => {
   const authClient = getAuthClient()
-  return authClient.get<StudentResponse>(`/students/${id}`)
+  return authClient.get<StudentResponse>(`/api/students/${id}`)
 }
 
 /**
@@ -155,7 +155,7 @@ export const createStudent = async (
   data: CreateStudentData
 ): Promise<StudentResponse> => {
   const authClient = getAuthClient()
-  return authClient.post<StudentResponse>('/students', data)
+  return authClient.post<StudentResponse>('/api/students', data)
 }
 
 /**
@@ -166,7 +166,7 @@ export const updateStudent = async (
   data: UpdateStudentData
 ): Promise<StudentResponse> => {
   const authClient = getAuthClient()
-  return authClient.patch<StudentResponse>(`/students/${id}`, data)
+  return authClient.patch<StudentResponse>(`/api/students/${id}`, data)
 }
 
 /**
@@ -174,7 +174,7 @@ export const updateStudent = async (
  */
 export const deleteStudent = async (id: string): Promise<{ message: string }> => {
   const authClient = getAuthClient()
-  return authClient.delete<{ message: string }>(`/students/${id}`)
+  return authClient.delete<{ message: string }>(`/api/students/${id}`)
 }
 
 /**
@@ -184,7 +184,7 @@ export const reactivateStudent = async (
   id: string
 ): Promise<StudentResponse> => {
   const authClient = getAuthClient()
-  return authClient.patch<StudentResponse>(`/students/${id}/reactivate`)
+  return authClient.patch<StudentResponse>(`/api/students/${id}/reactivate`)
 }
 
 /**
@@ -197,7 +197,7 @@ export const bulkImport = async (
   preview = false
 ): Promise<BulkImportResponse> => {
   const authClient = getAuthClient()
-  return authClient.post<BulkImportResponse>('/students/bulk-import', {
+  return authClient.post<BulkImportResponse>('/api/students/bulk-import', {
     preview,
     students,
   })
@@ -212,7 +212,7 @@ export const getCSVTemplate = async (): Promise<{
   notes: string[]
 }> => {
   const authClient = getAuthClient()
-  return authClient.get('/students/csv-template')
+  return authClient.get('/api/students/csv-template')
 }
 
 /**

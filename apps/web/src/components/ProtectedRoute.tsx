@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requireRole?: 'admin' | 'teacher'
+  requireRole?: 'admin' | 'school_admin' | 'teacher'
 }
 
 export default function ProtectedRoute({ children, requireRole }: ProtectedRouteProps) {
@@ -34,7 +34,12 @@ export default function ProtectedRoute({ children, requireRole }: ProtectedRoute
   }
 
   // Check role-based access if required
-  if (requireRole && user?.role !== requireRole) {
+  // school_admin has admin privileges
+  const hasAccess = !requireRole || 
+    user?.role === requireRole || 
+    (requireRole === 'admin' && user?.role === 'school_admin')
+  
+  if (!hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full text-center">

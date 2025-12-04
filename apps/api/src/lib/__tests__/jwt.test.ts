@@ -2,12 +2,11 @@
  * JWT Utilities Test Suite
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   generateToken,
   verifyToken,
   generateRefreshToken,
-  type TokenPayload,
 } from '../jwt';
 
 describe('JWT Utilities', () => {

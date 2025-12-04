@@ -26,12 +26,11 @@ import {
  */
 const settingsSchema = z.object({
   name: z.string().min(3, 'School name must be at least 3 characters'),
-  address: z.string().min(5, 'Address must be at least 5 characters'),
-  phone: z.string().regex(/^[\d\s\-+()]+$/, 'Invalid phone number format'),
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format'),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'),
   endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'),
   timezone: z.enum(['WIB', 'WITA', 'WIT']),
+  maxStudents: z.number().int().min(10).max(10000),
 })
 
 type SettingsFormData = z.infer<typeof settingsSchema>
@@ -56,12 +55,11 @@ export default function Settings() {
   // Form data
   const [formData, setFormData] = useState<SettingsFormData>({
     name: '',
-    address: '',
-    phone: '',
     primaryColor: '#3b82f6',
     startTime: '07:00',
     endTime: '15:00',
     timezone: 'WIB',
+    maxStudents: 100,
   })
 
   /**

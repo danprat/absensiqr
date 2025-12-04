@@ -213,7 +213,7 @@ class AttendanceService {
     const client = createAuthenticatedClient(token)
     const params = filters
       ? Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== undefined)
+          Object.entries(filters).filter(([, value]) => value !== undefined)
         )
       : undefined
 

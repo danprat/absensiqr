@@ -60,7 +60,7 @@ export const useAuth = () => {
         
         // Save to localStorage and state
         saveAuthData(response)
-        setToken(response.token)
+        setToken(response.tokens.accessToken)
         setUser(response.user)
         setSchool(response.school)
       } catch (error) {
@@ -131,18 +131,19 @@ export const useAuth = () => {
   /**
    * Refresh the auth token
    */
-  const refreshToken = useCallback(async (): Promise<void> => {
+  const refreshAuthToken = useCallback(async (): Promise<void> => {
     if (!token) return
 
     try {
       const response = await refreshTokenApi(token)
-      setToken(response.token)
-      localStorage.setItem('auth_token', response.token)
+      setToken(response.accessToken)
+      localStorage.setItem('auth_token', response.accessToken)
     } catch (error) {
-      // If refresh fails, logout
+      // If refresh fails with 401, logout
       if (error instanceof ApiClientError && error.status === 401) {
         await logout()
       }
+      // Silently ignore other errors (like missing refresh token)
     }
   }, [token, setToken, logout])
 
@@ -170,15 +171,15 @@ export const useAuth = () => {
     if (!isAuthenticated) return
 
     // Refresh immediately
-    refreshToken()
+    refreshAuthToken()
 
     // Set up interval for periodic refresh
     const intervalId = setInterval(() => {
-      refreshToken()
+      refreshAuthToken()
     }, TOKEN_REFRESH_INTERVAL)
 
     return () => clearInterval(intervalId)
-  }, [isAuthenticated, refreshToken])
+  }, [isAuthenticated, refreshAuthToken])
 
   return {
     user,
